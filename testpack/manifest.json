@@ -1,0 +1,31 @@
+{
+  "minecraft": {
+    "version": "1.12.2",
+    "modLoaders": [
+      {
+        "id": "forge-14.23.5.2860",
+        "primary": true
+      }
+    ]
+  },
+  "manifestType": "minecraftModpack",
+  "overrides": "overrides",
+  "manifestVersion": 1,
+  "version": "1.0",
+  "author": "Symmetric Devs",
+  "externalDeps": [
+    {
+      "url": "https://github.com/GregTechCEu/gregicality-science/releases/download/v0.0.1-alpha/gregtech-1.12.2-2.4.0-gcys-alpha.jar",
+      "hash": "a2461b070944295c80568b3e9ee0e3871363ac610183ac53a0f007d2393bfb1a",
+      "name": "GregTech Community Edition Unofficial"
+    }
+  ],
+  "name": "Test Pack",
+  "files": [
+    {
+      "projectID": 557549,
+      "fileID": 3957880,
+      "required": false
+    }
+  ]
+}
