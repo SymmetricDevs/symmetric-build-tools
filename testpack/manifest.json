@@ -25,7 +25,8 @@
     {
       "projectID": 557549,
       "fileID": 3957880,
-      "required": false
+      "required": false,
+      "side": "client"
     }
   ]
 }
