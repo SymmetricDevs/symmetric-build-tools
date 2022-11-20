@@ -25,5 +25,6 @@ fn main() {
         .build_side(BuildSide::Client)
         .download_type(DownloadType::All)
         .build();
+
     print!("{:#?}", build_type);
 }

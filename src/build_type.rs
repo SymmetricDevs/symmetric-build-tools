@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
@@ -35,13 +35,14 @@ pub enum ManifestType {
 
 #[derive(Debug)]
 #[allow(dead_code)]
-pub struct BuildType {
+pub struct BuildType<'a> {
     source_manifest: CFManifest,
     download_type: DownloadType,
     build_side: BuildSide,
     manifest_type: ManifestType,
     name: String,
-    download_list: HashMap<PathBuf, (String, Option<String>)>,
+    // {url: path}
+    download_list: HashMap<String, &'a Path>,
 }
 
 #[derive(Debug)]
@@ -71,7 +72,7 @@ impl Default for ManifestType {
     }
 }
 
-impl BuildType {
+impl BuildType<'_> {
     pub fn builder(manifest: CFManifest, name: &str) -> BuildTypeBuilder {
         BuildTypeBuilder::new(manifest, name)
     }
@@ -104,7 +105,7 @@ impl BuildTypeBuilder {
         self
     }
 
-    pub fn build(self) -> BuildType {
+    pub fn build(self) -> BuildType<'static> {
         BuildType {
             source_manifest: self.source_manifest,
             download_type: self.download_type.unwrap_or_default(),
