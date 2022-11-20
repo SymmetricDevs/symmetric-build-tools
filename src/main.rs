@@ -10,6 +10,10 @@ mod manifest;
 #[derive(Parser, Debug, Default)]
 #[command(author = "Symmetric Devs", version, about = "Build automation for minecraft modpacks written in rust", long_about = None)]
 struct ProgramInfo {
+    #[cfg(debug_assertions)]
+    #[arg(help = "Path of modpack source to use", default_value = "testpack")]
+    path: PathBuf,
+    #[cfg(not(debug_assertions))]
     #[arg(help = "Path of modpack source to use")]
     path: PathBuf,
 }
@@ -21,5 +25,5 @@ fn main() {
         .build_side(BuildSide::Client)
         .download_type(DownloadType::All)
         .build();
-    println!("{:?}", build_type);
+    print!("{:#?}", build_type);
 }
