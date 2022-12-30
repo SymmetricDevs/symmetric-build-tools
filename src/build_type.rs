@@ -1,21 +1,25 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use reqwest::header::{self, HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::build_type::BuildSide::Both;
 use crate::build_type::DownloadType::All;
 use crate::build_type::ManifestType::CurseForge;
-use crate::{CFManifest, DownloadFile};
+use crate::{BuildError, CFManifest};
 
-#[derive(Debug)]
+const CF_BASEURL: &str = "https://api.curseforge.com/v1";
+
+#[derive(Debug, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum DownloadType {
     All,
     NonCf,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum BuildSide {
     #[serde(alias = "server")]
     Server,
@@ -79,12 +83,72 @@ impl BuildInfo {
         BuildInfoBuilder::new(manifest, name, cf_api_key)
     }
 
-    pub fn fetch_mod_downloads(&mut self) {
-        for file in &self.source_manifest.files {
-            if let Some((url, path)) = file.get_download(self) {
-                self.download_list.insert(url, path.to_owned());
+    pub async fn fetch_mod_downloads(&mut self) -> Result<(), BuildError> {
+        if self.download_type == DownloadType::All {
+            let mut headers = HeaderMap::new();
+            let key = self.cf_api_key.to_string();
+            let mut auth_value = HeaderValue::from_str(&key)?;
+            auth_value.set_sensitive(true);
+            headers.insert("x-api-key", auth_value);
+            headers.insert(header::ACCEPT, HeaderValue::from_str("application/json")?);
+            let mut bad_mods = Vec::new();
+
+            let client = reqwest::Client::builder()
+                .default_headers(headers)
+                .build()?;
+
+            for file in &self.source_manifest.files {
+                if self.build_side == BuildSide::Both
+                    || file.side == self.build_side
+                    || file.side == Both
+                {
+                    let r = client
+                        .get(format!(
+                            "{}/mods/{}/files/{}/download-url",
+                            CF_BASEURL, file.project_id, file.file_id
+                        ))
+                        .send()
+                        .await?;
+                    let body = r.text().await?;
+                    if body.is_empty() {
+                        if let Value::Object(wrapped) = client
+                            .get(format!("{}/mods/{}", CF_BASEURL, file.project_id))
+                            .send()
+                            .await?
+                            .json()
+                            .await?
+                        {
+                            if let Value::Object(full_mod_info) = &wrapped["data"] {
+                                bad_mods.push(format!(
+                                    "`{}`: https://www.curseforge.com/minecraft/mc-mods/{}/files/{}",
+                                    full_mod_info["name"].as_str().unwrap(),
+                                    full_mod_info["slug"].as_str().unwrap(),
+                                    file.file_id
+                                ));
+                            } else {
+                                panic!("CF Died; mod erroring is: {:?}", file);
+                            }
+                        } else {
+                            panic!("CF Died; mod erroring is: {:?}", file);
+                        }
+                        continue;
+                    }
+
+                    let url = serde_json::from_str::<Value>(&body)?.as_object().unwrap()["data"]
+                        .as_str()
+                        .unwrap()
+                        .to_owned();
+                    self.download_list.insert(
+                        url.to_string(),
+                        PathBuf::from(format!("out/mod_cache/{}", url.split('/').last().unwrap())),
+                    );
+                }
             }
+            //TODO write to file
+            println!("Mods that are cringe:");
+            println!("{}", bad_mods.join("\n"));
         }
+        Ok(())
     }
 }
 

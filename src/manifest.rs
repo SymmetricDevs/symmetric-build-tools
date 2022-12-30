@@ -4,8 +4,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
-use crate::build_type::{BuildInfo, BuildSide};
-use crate::DownloadFile;
+use crate::build_type::BuildSide;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CFManifest {
@@ -63,12 +62,4 @@ pub struct CFMod {
     pub required: bool,
     #[serde(default)]
     pub side: BuildSide,
-}
-
-const CF_BASEURL: &str = "DownloadFile";
-
-impl DownloadFile for CFMod {
-    fn get_download(&self, info: &BuildInfo) -> Option<(String, &Path)> {
-        todo!()
-    }
 }

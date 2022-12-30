@@ -27,6 +27,12 @@
       "fileID": 3957880,
       "required": false,
       "side": "client"
+    },
+    {
+      "projectID": 242106,
+      "fileID": 2539562,
+      "required": true,
+      "side": "both"
     }
   ]
 }

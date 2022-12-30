@@ -1,6 +1,8 @@
 use crate::build_type::{BuildInfo, BuildSide, DownloadType};
+use auto_from::From;
 use clap::Parser;
 use manifest::CFManifest;
+use reqwest::header::InvalidHeaderValue;
 use std::env;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
@@ -24,7 +26,15 @@ pub trait DownloadFile {
     fn get_download(&self, info: &BuildInfo) -> Option<(String, &Path)>;
 }
 
-fn main() {
+#[derive(From, Debug)]
+pub enum BuildError {
+    InvalidHeaderValue(InvalidHeaderValue),
+    ReqwestError(reqwest::Error),
+    JSONError(serde_json::Error),
+}
+
+#[tokio::main]
+async fn main() {
     let args: ProgramInfo = ProgramInfo::parse();
     let manifest: CFManifest = CFManifest::load_from_file(&args.path);
     let api_key = match env::var("CFAPIKEY") {
@@ -34,10 +44,14 @@ fn main() {
             String::new()
         }
     };
-    let build_info: BuildInfo = BuildInfo::builder(manifest, "mmc", api_key)
-        .build_side(BuildSide::Client)
+    let mut build_info: BuildInfo = BuildInfo::builder(manifest, "mmc", api_key)
+        .build_side(BuildSide::Both)
         .download_type(DownloadType::All)
         .build();
+    match build_info.fetch_mod_downloads().await {
+        Ok(_) => (),
+        Err(e) => println!("{:?}", e),
+    }
 
-    print!("{:#?}", build_info);
+    println!("{:#?}", build_info);
 }
