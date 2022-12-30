@@ -4,22 +4,23 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
-use crate::build_type::BuildSide;
+use crate::build_type::{BuildInfo, BuildSide};
+use crate::DownloadFile;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CFManifest {
-    minecraft: MCInfo,
+    pub minecraft: MCInfo,
     #[serde(rename = "manifestType")]
-    manifest_type: String,
-    overrides: String,
+    pub manifest_type: String,
+    pub overrides: String,
     #[serde(rename = "manifestVersion")]
-    manifest_version: i32,
-    version: String,
-    author: String,
-    name: String,
+    pub manifest_version: i32,
+    pub version: String,
+    pub author: String,
+    pub name: String,
     #[serde(rename = "externalDeps")]
-    direct_download_mods: Vec<DirectDLMod>,
-    files: Vec<CFMod>,
+    pub direct_download_mods: Vec<DirectDLMod>,
+    pub files: Vec<CFMod>,
 }
 
 impl CFManifest {
@@ -32,34 +33,42 @@ impl CFManifest {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct MCInfo {
-    version: String,
+pub struct MCInfo {
+    pub version: String,
     #[serde(rename = "modLoaders")]
-    mod_loaders: Vec<ModLoaderInfo>,
+    pub mod_loaders: Vec<ModLoaderInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct ModLoaderInfo {
+pub struct ModLoaderInfo {
     id: String,
     primary: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct DirectDLMod {
-    url: String,
-    hash: String,
-    name: String,
+pub struct DirectDLMod {
+    pub url: String,
+    pub hash: String,
+    pub name: String,
     #[serde(default)]
-    side: BuildSide,
+    pub side: BuildSide,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct CFMod {
+pub struct CFMod {
     #[serde(rename = "projectID")]
-    project_id: u64,
+    pub project_id: u64,
     #[serde(rename = "fileID")]
-    file_id: u64,
-    required: bool,
+    pub file_id: u64,
+    pub required: bool,
     #[serde(default)]
-    side: BuildSide,
+    pub side: BuildSide,
+}
+
+const CF_BASEURL: &str = "DownloadFile";
+
+impl DownloadFile for CFMod {
+    fn get_download(&self, info: &BuildInfo) -> Option<(String, &Path)> {
+        todo!()
+    }
 }

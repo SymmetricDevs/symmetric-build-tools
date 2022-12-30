@@ -1,12 +1,12 @@
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
 use crate::build_type::BuildSide::Both;
 use crate::build_type::DownloadType::All;
 use crate::build_type::ManifestType::CurseForge;
-use crate::CFManifest;
+use crate::{CFManifest, DownloadFile};
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -35,23 +35,25 @@ pub enum ManifestType {
 
 #[derive(Debug)]
 #[allow(dead_code)]
-pub struct BuildType<'a> {
+pub struct BuildInfo {
     source_manifest: CFManifest,
     download_type: DownloadType,
     build_side: BuildSide,
     manifest_type: ManifestType,
     name: String,
+    cf_api_key: String,
     // {url: path}
-    download_list: HashMap<String, &'a Path>,
+    download_list: HashMap<String, PathBuf>,
 }
 
 #[derive(Debug)]
-pub struct BuildTypeBuilder {
+pub struct BuildInfoBuilder {
     source_manifest: CFManifest,
     download_type: Option<DownloadType>,
     build_side: Option<BuildSide>,
     manifest_type: Option<ManifestType>,
     name: String,
+    cf_api_key: String,
 }
 
 impl Default for DownloadType {
@@ -72,21 +74,30 @@ impl Default for ManifestType {
     }
 }
 
-impl BuildType<'_> {
-    pub fn builder(manifest: CFManifest, name: &str) -> BuildTypeBuilder {
-        BuildTypeBuilder::new(manifest, name)
+impl BuildInfo {
+    pub fn builder(manifest: CFManifest, name: &str, cf_api_key: String) -> BuildInfoBuilder {
+        BuildInfoBuilder::new(manifest, name, cf_api_key)
+    }
+
+    pub fn fetch_mod_downloads(&mut self) {
+        for file in &self.source_manifest.files {
+            if let Some((url, path)) = file.get_download(self) {
+                self.download_list.insert(url, path.to_owned());
+            }
+        }
     }
 }
 
 #[allow(dead_code)]
-impl BuildTypeBuilder {
-    fn new(manifest: CFManifest, name: &str) -> Self {
+impl BuildInfoBuilder {
+    fn new(manifest: CFManifest, name: &str, cf_api_key: String) -> Self {
         Self {
             source_manifest: manifest,
             download_type: None,
             build_side: None,
             manifest_type: None,
             name: name.to_string(),
+            cf_api_key,
         }
     }
 
@@ -105,14 +116,15 @@ impl BuildTypeBuilder {
         self
     }
 
-    pub fn build(self) -> BuildType<'static> {
-        BuildType {
+    pub fn build(self) -> BuildInfo {
+        BuildInfo {
             source_manifest: self.source_manifest,
             download_type: self.download_type.unwrap_or_default(),
             build_side: self.build_side.unwrap_or_default(),
             manifest_type: self.manifest_type.unwrap_or_default(),
             download_list: HashMap::new(),
             name: self.name,
+            cf_api_key: self.cf_api_key,
         }
     }
 }

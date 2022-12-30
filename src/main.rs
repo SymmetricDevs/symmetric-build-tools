@@ -1,10 +1,12 @@
-use crate::build_type::{BuildSide, BuildType, DownloadType};
+use crate::build_type::{BuildInfo, BuildSide, DownloadType};
 use clap::Parser;
 use manifest::CFManifest;
+use std::env;
 use std::fmt::Debug;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 mod build_type;
+mod cf_api;
 mod manifest;
 
 #[derive(Parser, Debug, Default)]
@@ -18,13 +20,24 @@ struct ProgramInfo {
     path: PathBuf,
 }
 
+pub trait DownloadFile {
+    fn get_download(&self, info: &BuildInfo) -> Option<(String, &Path)>;
+}
+
 fn main() {
     let args: ProgramInfo = ProgramInfo::parse();
     let manifest: CFManifest = CFManifest::load_from_file(&args.path);
-    let build_type: BuildType = BuildType::builder(manifest, "mmc")
+    let api_key = match env::var("CFAPIKEY") {
+        Ok(s) => s,
+        Err(e) => {
+            println!("Failed to find CFAPIKEY, {}", e);
+            String::new()
+        }
+    };
+    let build_info: BuildInfo = BuildInfo::builder(manifest, "mmc", api_key)
         .build_side(BuildSide::Client)
         .download_type(DownloadType::All)
         .build();
 
-    print!("{:#?}", build_type);
+    print!("{:#?}", build_info);
 }
