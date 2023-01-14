@@ -50,7 +50,7 @@ async fn main() {
         .build();
     match build_info.fetch_mod_downloads().await {
         Ok(_) => (),
-        Err(e) => println!("{:?}", e),
+        Err(e) => panic!("{:?}", e),
     }
 
     println!("{:#?}", build_info);

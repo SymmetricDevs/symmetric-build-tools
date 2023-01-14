@@ -3,11 +3,11 @@ use std::path::PathBuf;
 
 use reqwest::header::{self, HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::build_type::BuildSide::Both;
 use crate::build_type::DownloadType::All;
 use crate::build_type::ManifestType::CurseForge;
+use crate::cf_api::{CFResponse, File, Mod};
 use crate::{BuildError, CFManifest};
 
 const CF_BASEURL: &str = "https://api.curseforge.com/v1";
@@ -91,7 +91,7 @@ impl BuildInfo {
             auth_value.set_sensitive(true);
             headers.insert("x-api-key", auth_value);
             headers.insert(header::ACCEPT, HeaderValue::from_str("application/json")?);
-            let mut bad_mods = Vec::new();
+            let mut bad_mods: Vec<String> = Vec::new();
 
             let client = reqwest::Client::builder()
                 .default_headers(headers)
@@ -102,46 +102,35 @@ impl BuildInfo {
                     || file.side == self.build_side
                     || file.side == Both
                 {
-                    let r = client
+                    let file_info: File = client
                         .get(format!(
-                            "{}/mods/{}/files/{}/download-url",
+                            "{}/mods/{}/files/{}",
                             CF_BASEURL, file.project_id, file.file_id
                         ))
                         .send()
-                        .await?;
-                    let body = r.text().await?;
-                    if body.is_empty() {
-                        if let Value::Object(wrapped) = client
+                        .await?
+                        .json::<CFResponse<_>>()
+                        .await?
+                        .data;
+
+                    if file_info.download_url.is_empty() {
+                        let mod_info: Mod = client
                             .get(format!("{}/mods/{}", CF_BASEURL, file.project_id))
                             .send()
                             .await?
-                            .json()
+                            .json::<CFResponse<_>>()
                             .await?
-                        {
-                            if let Value::Object(full_mod_info) = &wrapped["data"] {
-                                bad_mods.push(format!(
-                                    "`{}`: https://www.curseforge.com/minecraft/mc-mods/{}/files/{}",
-                                    full_mod_info["name"].as_str().unwrap(),
-                                    full_mod_info["slug"].as_str().unwrap(),
-                                    file.file_id
-                                ));
-                            } else {
-                                panic!("CF Died; mod erroring is: {:?}", file);
-                            }
-                        } else {
-                            panic!("CF Died; mod erroring is: {:?}", file);
-                        }
-                        continue;
+                            .data;
+                        bad_mods.push(format!(
+                            "`{}`: https://www.curseforge.com/minecraft/mc-mods/{}/files/{}",
+                            mod_info.name, mod_info.slug, file.file_id
+                        ));
+                    } else {
+                        self.download_list.insert(
+                            file_info.download_url.into(),
+                            PathBuf::from(format!("out/mod_cache/{}", file_info.file_name)),
+                        );
                     }
-
-                    let url = serde_json::from_str::<Value>(&body)?.as_object().unwrap()["data"]
-                        .as_str()
-                        .unwrap()
-                        .to_owned();
-                    self.download_list.insert(
-                        url.to_string(),
-                        PathBuf::from(format!("out/mod_cache/{}", url.split('/').last().unwrap())),
-                    );
                 }
             }
             //TODO write to file
