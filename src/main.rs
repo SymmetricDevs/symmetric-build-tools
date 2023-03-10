@@ -1,9 +1,8 @@
 use crate::build_type::{BuildInfo, BuildSide, DownloadType};
-use auto_from::From;
 use clap::Parser;
 use manifest::CFManifest;
-use reqwest::header::InvalidHeaderValue;
 use std::env;
+use std::error::Error;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 
@@ -26,13 +25,7 @@ pub trait DownloadFile {
     fn get_download(&self, info: &BuildInfo) -> Option<(String, &Path)>;
 }
 
-#[derive(From, Debug)]
-pub enum BuildError {
-    InvalidHeaderValue(InvalidHeaderValue),
-    ReqwestError(reqwest::Error),
-    JSONError(serde_json::Error),
-}
-
+pub type BuildResult<T> = Result<T, Box<dyn Error + Send + Sync + 'static>>;
 #[tokio::main]
 async fn main() {
     let args: ProgramInfo = ProgramInfo::parse();
@@ -48,9 +41,13 @@ async fn main() {
         .build_side(BuildSide::Both)
         .download_type(DownloadType::All)
         .build();
-    match build_info.fetch_mod_downloads().await {
-        Ok(_) => (),
-        Err(e) => panic!("{:?}", e),
+    if let Err(e) = build_info.fetch_mod_downloads().await {
+        println!("Error while fetching mod URLs: {e}");
+        let mut src = e.source();
+        while let Some(src_e) = src {
+            println!("Caused by: {src_e}");
+            src = src_e.source();
+        }
     }
 
     println!("{:#?}", build_info);

@@ -8,7 +8,7 @@ use crate::build_type::BuildSide::Both;
 use crate::build_type::DownloadType::All;
 use crate::build_type::ManifestType::CurseForge;
 use crate::cf_api::{CFResponse, File, Mod};
-use crate::{BuildError, CFManifest};
+use crate::{BuildResult, CFManifest};
 
 const CF_BASEURL: &str = "https://api.curseforge.com/v1";
 
@@ -83,7 +83,7 @@ impl BuildInfo {
         BuildInfoBuilder::new(manifest, name, cf_api_key)
     }
 
-    pub async fn fetch_mod_downloads(&mut self) -> Result<(), BuildError> {
+    pub async fn fetch_mod_downloads(&mut self) -> BuildResult<()> {
         if self.download_type == DownloadType::All {
             let mut headers = HeaderMap::new();
             let key = self.cf_api_key.to_string();
