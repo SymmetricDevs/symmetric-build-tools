@@ -5,35 +5,36 @@ use reqwest::header::{self, HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
 
 use crate::build_type::BuildSide::Both;
-use crate::build_type::DownloadType::All;
-use crate::build_type::ManifestType::CurseForge;
 use crate::cf_api::{CFResponse, File, Mod};
 use crate::{BuildResult, CFManifest};
 
 const CF_BASEURL: &str = "https://api.curseforge.com/v1";
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Default)]
 #[allow(dead_code)]
 pub enum DownloadType {
+    #[default]
     All,
     NonCf,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Default, Debug, PartialEq, Eq)]
 pub enum BuildSide {
     #[serde(alias = "server")]
     Server,
     #[serde(alias = "client")]
     Client,
     #[serde(alias = "both")]
+    #[default]
     Both,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 #[allow(dead_code)]
 pub enum ManifestType {
     None,
     MultiMC,
+    #[default]
     CurseForge,
 }
 
@@ -58,24 +59,6 @@ pub struct BuildInfoBuilder {
     manifest_type: Option<ManifestType>,
     name: String,
     cf_api_key: String,
-}
-
-impl Default for DownloadType {
-    fn default() -> Self {
-        All
-    }
-}
-
-impl Default for BuildSide {
-    fn default() -> Self {
-        Both
-    }
-}
-
-impl Default for ManifestType {
-    fn default() -> Self {
-        CurseForge
-    }
 }
 
 impl BuildInfo {
