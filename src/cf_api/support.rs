@@ -11,6 +11,7 @@ pub struct CFResponse<T> {
 }
 
 // FFS CF YOUR DOCS DONT MATCH THE ACTUAL RESPONSE BECAUSE FUCK YOU
+#[derive(Clone)]
 pub struct CFString {
     inner: Option<String>,
 }
@@ -30,6 +31,12 @@ impl Serialize for CFString {
 impl From<CFString> for String {
     fn from(val: CFString) -> Self {
         val.get()
+    }
+}
+
+impl From<String> for CFString {
+    fn from(val: String) -> Self {
+        Self { inner: Some(val) }
     }
 }
 

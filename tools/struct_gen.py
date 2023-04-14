@@ -16,7 +16,7 @@ class Struct:
 
     def to_string(self, enum_overrides: dict[str, str]) -> str:
         if not self.enum:
-            out = f"#[derive(Serialize, Deserialize, Debug)]\npub struct {self.name} {chr(123)}\n"
+            out = f"#[derive(Serialize, Deserialize, Debug, Clone)]\npub struct {self.name} {chr(123)}\n"
             for i in self.members.items():
                 if i[1][1] != "none" and i[1][1] != "None":
                     out += f"    // {i[1][1]}\n"
@@ -28,7 +28,7 @@ class Struct:
             out += "}"
             return out
         else:
-            out = f"cf_enum! {chr(123)}{self.name}, [derive(Serialize_repr, PartialEq, Debug)],\n"
+            out = f"cf_enum! {chr(123)}{self.name}, [derive(Serialize_repr, PartialEq, Debug, Clone)],\n"
             for n, i in enumerate(self.members.items()):
                 out += f"    {enum_get_var_prefix(i,n,self)}{enum_change_case(i[1])} = {i[0]}{(',' if n < len(self.members) - 1 else '')}\n"
             out += "}"

@@ -9,7 +9,7 @@ use super::CFString;
 * To change enums default values, add the enum name and the default value to tools/enum_default_overrides.json
 */
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Mod {
     // The mod id
     pub id: i64,
@@ -78,36 +78,7 @@ pub struct Mod {
     pub thumbs_up_count: i64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ModLinks {
-    #[serde(rename = "websiteUrl")]
-    pub website_url: CFString,
-    #[serde(rename = "wikiUrl")]
-    pub wiki_url: CFString,
-    #[serde(rename = "issuesUrl")]
-    pub issues_url: CFString,
-    #[serde(rename = "sourceUrl")]
-    pub source_url: CFString,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct FileIndex {
-    #[serde(rename = "gameVersion")]
-    pub game_version: CFString,
-    #[serde(rename = "fileId")]
-    pub file_id: i64,
-    pub filename: CFString,
-    // None
-    #[serde(rename = "releaseType")]
-    pub release_type: FileReleaseType,
-    #[serde(rename = "gameVersionTypeId")]
-    pub game_version_type_id: Option<i64>,
-    // None
-    #[serde(rename = "modLoader")]
-    pub mod_loader: ModLoaderType,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ModAsset {
     pub id: i64,
     #[serde(rename = "modId")]
@@ -119,55 +90,7 @@ pub struct ModAsset {
     pub url: CFString,
 }
 
-cf_enum! {ModLoaderType, [derive(Serialize_repr, PartialEq, Debug)],
-    @Any = 0,
-    Forge = 1,
-    Cauldron = 2,
-    LiteLoader = 3,
-    Fabric = 4,
-    Quilt = 5
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Category {
-    // The category id
-    pub id: i64,
-    // The game id related to the category
-    #[serde(rename = "gameId")]
-    pub game_id: i64,
-    // Category name
-    pub name: CFString,
-    // The category slug as it appear in the URL
-    pub slug: CFString,
-    // The category URL
-    pub url: CFString,
-    // URL for the category icon
-    #[serde(rename = "iconUrl")]
-    pub icon_url: CFString,
-    // Last modified date of the category
-    #[serde(rename = "dateModified")]
-    pub date_modified: CFString,
-    // A top level category for other categories
-    #[serde(rename = "isClass")]
-    pub is_class: Option<bool>,
-    // The class id of the category, meaning - the class of which this category is under
-    #[serde(rename = "classId")]
-    pub class_id: Option<i64>,
-    // The parent category for this category
-    #[serde(rename = "parentCategoryId")]
-    pub parent_category_id: Option<i64>,
-    // The display index for this category
-    #[serde(rename = "displayIndex")]
-    pub display_index: Option<i64>,
-}
-
-cf_enum! {FileReleaseType, [derive(Serialize_repr, PartialEq, Debug)],
-    Release = 1,
-    Beta = 2,
-    @Alpha = 3
-}
-
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct File {
     // The file id
     pub id: i64,
@@ -229,7 +152,66 @@ pub struct File {
     pub modules: Vec<FileModule>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FileDependency {
+    #[serde(rename = "modId")]
+    pub mod_id: i64,
+    // None
+    #[serde(rename = "relationType")]
+    pub relation_type: FileRelationType,
+}
+
+cf_enum! {FileReleaseType, [derive(Serialize_repr, PartialEq, Debug, Clone)],
+    Release = 1,
+    Beta = 2,
+    @Alpha = 3
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FileIndex {
+    #[serde(rename = "gameVersion")]
+    pub game_version: CFString,
+    #[serde(rename = "fileId")]
+    pub file_id: i64,
+    pub filename: CFString,
+    // None
+    #[serde(rename = "releaseType")]
+    pub release_type: FileReleaseType,
+    #[serde(rename = "gameVersionTypeId")]
+    pub game_version_type_id: Option<i64>,
+    // None
+    #[serde(rename = "modLoader")]
+    pub mod_loader: ModLoaderType,
+}
+
+cf_enum! {ModLoaderType, [derive(Serialize_repr, PartialEq, Debug, Clone)],
+    @Any = 0,
+    Forge = 1,
+    Cauldron = 2,
+    LiteLoader = 3,
+    Fabric = 4,
+    Quilt = 5
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ModLinks {
+    #[serde(rename = "websiteUrl")]
+    pub website_url: CFString,
+    #[serde(rename = "wikiUrl")]
+    pub wiki_url: CFString,
+    #[serde(rename = "issuesUrl")]
+    pub issues_url: CFString,
+    #[serde(rename = "sourceUrl")]
+    pub source_url: CFString,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FileModule {
+    pub name: CFString,
+    pub fingerprint: i64,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SortableGameVersion {
     // Original version name (e.g. 1.5b)
     #[serde(rename = "gameVersionName")]
@@ -248,34 +230,7 @@ pub struct SortableGameVersion {
     pub game_version_type_id: Option<i64>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct FileDependency {
-    #[serde(rename = "modId")]
-    pub mod_id: i64,
-    // None
-    #[serde(rename = "relationType")]
-    pub relation_type: FileRelationType,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct FileModule {
-    pub name: CFString,
-    pub fingerprint: i64,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct FileHash {
-    pub value: CFString,
-    // None
-    pub algo: HashAlgo,
-}
-
-cf_enum! {HashAlgo, [derive(Serialize_repr, PartialEq, Debug)],
-    @Sha1 = 1,
-    Md5 = 2
-}
-
-cf_enum! {FileRelationType, [derive(Serialize_repr, PartialEq, Debug)],
+cf_enum! {FileRelationType, [derive(Serialize_repr, PartialEq, Debug, Clone)],
     EmbeddedLibrary = 1,
     @OptionalDependency = 2,
     RequiredDependency = 3,
@@ -284,7 +239,14 @@ cf_enum! {FileRelationType, [derive(Serialize_repr, PartialEq, Debug)],
     Include = 6
 }
 
-cf_enum! {ModStatus, [derive(Serialize_repr, PartialEq, Debug)],
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ModAuthor {
+    pub id: i64,
+    pub name: CFString,
+    pub url: CFString,
+}
+
+cf_enum! {ModStatus, [derive(Serialize_repr, PartialEq, Debug, Clone)],
     @New = 1,
     ChangesRequired = 2,
     UnderSoftReview = 3,
@@ -297,7 +259,7 @@ cf_enum! {ModStatus, [derive(Serialize_repr, PartialEq, Debug)],
     UnderReview = 10
 }
 
-cf_enum! {FileStatus, [derive(Serialize_repr, PartialEq, Debug)],
+cf_enum! {FileStatus, [derive(Serialize_repr, PartialEq, Debug, Clone)],
     @Processing = 1,
     ChangesRequired = 2,
     UnderReview = 3,
@@ -315,10 +277,48 @@ cf_enum! {FileStatus, [derive(Serialize_repr, PartialEq, Debug)],
     FailedPublishing = 15
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ModAuthor {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Category {
+    // The category id
     pub id: i64,
+    // The game id related to the category
+    #[serde(rename = "gameId")]
+    pub game_id: i64,
+    // Category name
     pub name: CFString,
+    // The category slug as it appear in the URL
+    pub slug: CFString,
+    // The category URL
     pub url: CFString,
+    // URL for the category icon
+    #[serde(rename = "iconUrl")]
+    pub icon_url: CFString,
+    // Last modified date of the category
+    #[serde(rename = "dateModified")]
+    pub date_modified: CFString,
+    // A top level category for other categories
+    #[serde(rename = "isClass")]
+    pub is_class: Option<bool>,
+    // The class id of the category, meaning - the class of which this category is under
+    #[serde(rename = "classId")]
+    pub class_id: Option<i64>,
+    // The parent category for this category
+    #[serde(rename = "parentCategoryId")]
+    pub parent_category_id: Option<i64>,
+    // The display index for this category
+    #[serde(rename = "displayIndex")]
+    pub display_index: Option<i64>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FileHash {
+    pub value: CFString,
+    // None
+    pub algo: HashAlgo,
+}
+
+cf_enum! {HashAlgo, [derive(Serialize_repr, PartialEq, Debug, Clone)],
+    @Sha1 = 1,
+    Md5 = 2
 }
 
