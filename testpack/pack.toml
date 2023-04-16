@@ -1,0 +1,20 @@
+version = "1.0"
+author = "Symmetric Devs"
+name = "Test pack"
+
+[minecraft]
+version = "1.12.2"
+modloader = "forge-14.23.5.2860"
+
+[ddl.ceu]
+url = "https://github.com/GregTechCEu/gregicality-science/releases/download/v0.0.1-alpha/gregtech-1.12.2-2.4.0-gcys-alpha.jar"
+hash = "a2461b070944295c80568b3e9ee0e3871363ac610183ac53a0f007d2393bfb1a"
+
+[cf.jei]
+project_id = 238222
+file_id = 4393461
+side = "client"
+
+[cf.ae2]
+project_id = 570458
+file_id = 4463434
